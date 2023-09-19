@@ -67,3 +67,14 @@ and wakes it up again.
 
 The bottom of the two front buttons can be used to switch between the 
 debug information page and the clock. 
+
+## Customization
+
+### Fonts
+
+By default, a [font based upon a simulation of the A320 engine indication system](https://github.com/flybywiresim/aircraft/blob/master/fbw-a32nx/src/fonts/ECAMFontRegular_Source.sfd)
+is used. 
+
+To replace the font it needs to be converted using the 
+[lvgl online font converter](https://lvgl.io/tools/fontconverter)
+and can then be loaded and used in [clock_gui.cpp](src/clock_gui.cpp).
