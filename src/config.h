@@ -11,6 +11,8 @@
 // Set the timezone for the local time, the default is Vienna time.
 #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
 
+#define NTP_SERVER "0.pool.ntp.org"
+
 /* ----------------------------------------- */
 
 /* LCD CONFIG */
