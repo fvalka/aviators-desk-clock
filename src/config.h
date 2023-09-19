@@ -15,6 +15,14 @@
 
 /* ----------------------------------------- */
 
+
+// Detailed NTP config
+
+#define NTP_SHORT_INTERVAL 5 // seconds
+#define NTP_LONG_INTERVAL 7200 // seconds
+#define NTP_MAX_SYNC_AGE 16200 // seconds
+#define NTP_MIN_ACCURACY 400
+
 /* LCD CONFIG */
 // Too low or too high pixel clock may cause screen mosaic
 #define LCD_PIXEL_CLOCK_HZ   (16 * 1000 * 1000)
