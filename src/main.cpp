@@ -33,6 +33,10 @@ OneButton button2(PIN_BUTTON_2, true);
 SunSet sun;
 int current_sunrise_calculation_day = -1;
 
+boolean syncEventTriggered = false; // True if a time even has been triggered
+NTPEvent_t ntpEvent; // Last triggered event
+boolean isFirstSync = true;
+
 #if defined(LCD_MODULE_CMD_1)
 typedef struct {
     uint8_t cmd;
@@ -65,11 +69,13 @@ bool get_int_signal = false;
 
 void connectWiFi();
 bool getGMTTime(struct tm * info, uint32_t ms = 5000);
-bool isClockValid();
+bool isTimeValid();
 String formatTime(struct tm *info);
 String formatFractionalMinutes(double fractMinutes);
 
 void updateSunCalculations(const tm &timeinfo);
+
+void processSyncEvent(NTPEvent_t ntpEvent);
 
 static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -219,6 +225,10 @@ void setup()
     NTP.begin(NTP_SERVER);
     NTP.setMinSyncAccuracy(NTP_MIN_ACCURACY);
     NTP.setInterval(NTP_SHORT_INTERVAL, NTP_LONG_INTERVAL);
+    NTP.onNTPSyncEvent ([] (NTPEvent_t event) {
+        ntpEvent = event;
+        syncEventTriggered = true;
+    });
 }
 
 void loop()
@@ -227,6 +237,12 @@ void loop()
     button1.tick();
     button2.tick();
     delay(3);
+
+    if (syncEventTriggered) {
+        syncEventTriggered = false;
+        processSyncEvent (ntpEvent);
+    }
+
     static uint32_t last_tick;
     if (millis() - last_tick > 100) {
         struct tm timeinfo;
@@ -252,9 +268,22 @@ void loop()
     }
 }
 
+void processSyncEvent (NTPEvent_t ntpEvent) {
+    switch (ntpEvent.event) {
+        case timeSyncd:
+        case partlySync:
+        case syncNotNeeded:
+        case accuracyError:
+            Serial.printf ("[NTP-event] %s\n", NTP.ntpEvent2str (ntpEvent));
+            break;
+        default:
+            break;
+    }
+}
+
 void updateSunCalculations(const tm &timeinfo) {
     // check if the day of the month changed, if not skip the calculation to save CPU cycles
-    if(current_sunrise_calculation_day != timeinfo.tm_mday && isClockValid()) {
+    if(current_sunrise_calculation_day != timeinfo.tm_mday && isTimeValid()) {
         sun.setCurrentDate(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
         double sunrise = sun.calcCivilSunrise();
         double sunset = sun.calcCivilSunset();
@@ -327,16 +356,17 @@ bool getGMTTime(struct tm * info, uint32_t ms)
     return false;
 }
 
-bool isClockValid() {
+bool isTimeValid() {
     timeval currenttime;
     gettimeofday(&currenttime, NULL);
     double ntp_sync_age_seconds = difftime(currenttime.tv_sec, NTP.getLastNTPSync());
     int32_t ntp_sync_age_seconds_int = static_cast<int32_t>(ntp_sync_age_seconds);
     lv_msg_send(MSG_SYNC_AGE, &ntp_sync_age_seconds_int);
 
-    if(difftime(NTP.getLastNTPSync(), NTP.getFirstSync()) == 0) {
+    if(isFirstSync) {
         // the status check needs to be stricter on the first sync
         if(NTP.syncStatus() == syncd) {
+            isFirstSync = false;
             lv_msg_send(MSG_SYNC_STATUS, "First sync successful");
             return true;
         } else {
@@ -348,8 +378,6 @@ bool isClockValid() {
         // during the sync process, where the status is at first partialSync and
         // then again syncd after a second sync step
         if(NTP.syncStatus() == syncd || NTP.syncStatus() == partialSync) {
-            lv_msg_send(MSG_SYNC_STATUS, "Synced");
-
             if (ntp_sync_age_seconds > NTP_MAX_SYNC_AGE) {
                 lv_msg_send(MSG_SYNC_STATUS, "Sync older than max age");
 
@@ -367,7 +395,7 @@ bool isClockValid() {
 
 String formatTime(struct tm * info)
 {
-    if(!isClockValid()) {
+    if(!isTimeValid()) {
         return "INOP";
     }
 
@@ -377,7 +405,7 @@ String formatTime(struct tm * info)
 }
 
 String formatFractionalMinutes(double fractMinutes) {
-    if(!isClockValid()) {
+    if(!isTimeValid()) {
         return "INOP";
     }
 
