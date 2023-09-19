@@ -9,7 +9,6 @@
 #define LCD_MODULE_CMD_1
 
 #include "OneButton.h" /* https://github.com/mathertel/OneButton.git */
-#include "WiFi.h"
 #include "Wire.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
@@ -329,7 +328,14 @@ bool getGMTTime(struct tm * info, uint32_t ms)
 }
 
 bool isClockValid() {
+    timeval currenttime;
+    gettimeofday(&currenttime, NULL);
+    double ntp_sync_age_seconds = difftime(currenttime.tv_sec, NTP.getLastNTPSync());
+    int32_t ntp_sync_age_seconds_int = static_cast<int32_t>(ntp_sync_age_seconds);
+    lv_msg_send(MSG_SYNC_AGE, &ntp_sync_age_seconds_int);
+
     if(difftime(NTP.getLastNTPSync(), NTP.getFirstSync()) == 0) {
+        // the status check needs to be stricter on the first sync
         if(NTP.syncStatus() == syncd) {
             lv_msg_send(MSG_SYNC_STATUS, "First sync successful");
             return true;
@@ -338,12 +344,11 @@ bool isClockValid() {
             return false;
         }
     } else {
+        // on a later sync we can also accept a partialSync since this regularly happens
+        // during the sync process, where the status is at first partialSync and
+        // then again syncd after a second sync step
         if(NTP.syncStatus() == syncd || NTP.syncStatus() == partialSync) {
             lv_msg_send(MSG_SYNC_STATUS, "Synced");
-
-            timeval currenttime;
-            gettimeofday(&currenttime, NULL);
-            double ntp_sync_age_seconds = difftime(currenttime.tv_sec, NTP.getLastNTPSync());
 
             if (ntp_sync_age_seconds > NTP_MAX_SYNC_AGE) {
                 lv_msg_send(MSG_SYNC_STATUS, "Sync older than max age");

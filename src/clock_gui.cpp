@@ -159,8 +159,11 @@ void ui_begin() {
     lv_obj_align_to(ntp_status_label, uptime_label, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
     lv_obj_add_event_cb(ntp_status_label, update_text_subscriber, LV_EVENT_MSG_RECEIVED, NULL);
     lv_msg_subsribe_obj(MSG_SYNC_STATUS, ntp_status_label, (void *) "NTP status: %s");
-    
 
+    lv_obj_t *ntp_age_label = lv_label_create(tv2);
+    lv_obj_align_to(ntp_age_label, ntp_status_label, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
+    lv_obj_add_event_cb(ntp_age_label, update_text_subscriber_int, LV_EVENT_MSG_RECEIVED, NULL);
+    lv_msg_subsribe_obj(MSG_SYNC_AGE, ntp_age_label, (void *) "NTP sync age: %d s");
 
 }
 

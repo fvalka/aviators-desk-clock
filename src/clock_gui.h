@@ -12,6 +12,7 @@
 #define MSG_ECET 13
 #define MSG_UPTIME 14
 #define MSG_SYNC_STATUS 15
+#define MSG_SYNC_AGE 16
 
 #define LV_DELAY(x)                                                                                                                                  \
   do {                                                                                                                                               \
