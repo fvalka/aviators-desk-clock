@@ -18,7 +18,7 @@
 
 // Detailed NTP config
 
-#define NTP_SHORT_INTERVAL 5 // seconds
+#define NTP_SHORT_INTERVAL 10 // seconds
 #define NTP_LONG_INTERVAL 7200 // seconds
 #define NTP_MAX_SYNC_AGE 16200 // seconds
 #define NTP_MIN_ACCURACY 400
