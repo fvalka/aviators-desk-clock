@@ -19,20 +19,9 @@
 #include <sunset.h>
 #include "WiFiManager.h"
 
-#include <HTTPClient.h>
-#include <WiFiClientSecure.h>
 #include <esp_wifi.h>
 
 #include "Ticker.h"
-
-// The factory program uses the Chinese time zone by default.
-// Commenting this line will automatically get the time zone, provided that the SSL certificate is valid.
-// Please pay attention to check the validity of the certificate.
-// The current configuration certificate is valid until April 16, 2024
-#define CUSTOM_TIMEZONE         "CET-1CEST,M3.5.0,M10.5.0/3"
-
-#define LATITUDE 47.964991751824925
-#define LONGITUDE 16.26048809382469
 
 esp_lcd_panel_io_handle_t io_handle = NULL;
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
@@ -44,8 +33,6 @@ OneButton button2(PIN_BUTTON_2, true);
 
 SunSet sun;
 int current_sunrise_calculation_day = -1;
-
-bool time_valid = false;
 
 #if defined(LCD_MODULE_CMD_1)
 typedef struct {
@@ -73,19 +60,17 @@ lcd_cmd_t lcd_st7789v[] = {
 };
 #endif
 
-bool inited_touch = false;
-bool inited_sd = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
 bool get_int_signal = false;
 #endif
 
-void wifi_connect();
+void connectWiFi();
 bool getGMTTime(struct tm * info, uint32_t ms = 5000);
 bool isClockValid();
 String formatTime(struct tm *info);
 String formatFractionalMinutes(double fractMinutes);
 
-void update_sun_calculations(const tm &timeinfo);
+void updateSunCalculations(const tm &timeinfo);
 
 static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -214,7 +199,7 @@ void setup()
     is_initialized_lvgl = true;
 
     //wifi_test();
-    wifi_connect();
+    connectWiFi();
 
     LV_DELAY(2000);
     ui_begin();
@@ -254,7 +239,7 @@ void loop()
             String localtime_formatted = formatTime(&timeinfo);
             lv_msg_send(MSG_LOCALTIME, localtime_formatted.c_str());
 
-            update_sun_calculations(timeinfo);
+            updateSunCalculations(timeinfo);
 
         }
 
@@ -271,7 +256,7 @@ void loop()
     }
 }
 
-void update_sun_calculations(const tm &timeinfo) {
+void updateSunCalculations(const tm &timeinfo) {
     // check if the day of the month changed, if not skip the calculation to save CPU cycles
     if(current_sunrise_calculation_day != timeinfo.tm_mday && isClockValid()) {
         sun.setCurrentDate(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday);
@@ -292,7 +277,7 @@ void update_sun_calculations(const tm &timeinfo) {
     }
 }
 
-void wifi_connect() {
+void connectWiFi() {
     String text;
 
     lv_obj_t *log_label = lv_label_create(lv_scr_act());
