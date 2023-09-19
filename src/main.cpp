@@ -99,9 +99,6 @@ void setup()
     digitalWrite(PIN_POWER_ON, HIGH);
     Serial.begin(115200);
 
-    //sntp_servermode_dhcp(1); // (optional)
-    //configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
-
     pinMode(PIN_LCD_RD, OUTPUT);
     digitalWrite(PIN_LCD_RD, HIGH);
     esp_lcd_i80_bus_handle_t i80_bus = NULL;
