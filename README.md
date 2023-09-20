@@ -69,6 +69,19 @@ and wakes it up again.
 The bottom of the two front buttons can be used to switch between the 
 debug information page and the clock. 
 
+### BCMT and ECET Calculation
+
+The BCMT and ECET calculation are performed using the
+[sunset](https://github.com/buelowp/sunset) library for Arduino. 
+
+BCMT and ECET are calculated for the current local date day but shown
+in UTC. Therefore, BCMT or ECET can actually be on a different UTC day. 
+
+Both are returned in fractional minutes, which are then rounded and converted
+to hours and minutes. Therefore, a one-minute difference may be 
+observed compared to other clocks or lists, depending on which treatment
+of seconds those sources choose. 
+
 ## Customization
 
 ### Fonts
