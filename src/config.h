@@ -5,8 +5,8 @@
 
 // Set the location of the clock for BCMT and ECET calculation
 // the default is Vöslau Airfield in Austria, LOAV
-#define LATITUDE 47.964991751824925 // in decimal degrees, with North being positive
-#define LONGITUDE 16.26048809382469 // in decimal degrees, with East being positive
+#define LATITUDE 47.964444 // in decimal degrees, with North being positive
+#define LONGITUDE 16.259444 // in decimal degrees, with East being positive
 
 // Set the timezone for the local time, the default is Vienna time.
 #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
