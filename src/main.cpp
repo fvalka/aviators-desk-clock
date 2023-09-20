@@ -288,8 +288,8 @@ void updateSunCalculations(const tm &timeinfo) {
         double sunrise = sun.calcCivilSunrise();
         double sunset = sun.calcCivilSunset();
 
-        String sunrise_formatted = formatFractionalMinutes(floor(sunrise));
-        String sunset_formatted = formatFractionalMinutes(floor(sunset));
+        String sunrise_formatted = formatFractionalMinutes(round(sunrise));
+        String sunset_formatted = formatFractionalMinutes(round(sunset));
 
         lv_msg_send(MSG_BCMT, sunrise_formatted.c_str());
         lv_msg_send(MSG_ECET, sunset_formatted.c_str());
@@ -299,6 +299,9 @@ void updateSunCalculations(const tm &timeinfo) {
         Serial.printf("Updated BCMT to %s and ECET to %s\n",
                       sunrise_formatted.c_str(),
                       sunset_formatted.c_str());
+        Serial.printf("Fractional minutes: BCMT %.2f and ECET %.2f",
+                      sunrise,
+                      sunset);
     }
 }
 
@@ -410,7 +413,7 @@ String formatFractionalMinutes(double fractMinutes) {
     }
 
     int hours = floor(fractMinutes / 60);
-    int minutes = fractMinutes - hours * 60;
+    int minutes = static_cast<int>(round(fractMinutes - hours * 60));
 
     char buffer[10];
     snprintf(buffer, sizeof(buffer), "%02d:%02d", hours, minutes);
