@@ -13,6 +13,8 @@
 
 #define NTP_SERVER "0.pool.ntp.org"
 
+#define LCD_BRIGHTNESS 128 // max brightness is 0xFF or 255
+
 /* ----------------------------------------- */
 
 

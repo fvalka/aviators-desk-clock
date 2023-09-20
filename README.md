@@ -32,14 +32,15 @@ Configuration example:
 ```
 // Set the location of the clock for BCMT and ECET calculation
 // the default is Vöslau Airfield in Austria, LOAV
-#define LATITUDE 47.964991751824925 // in decimal degrees, with North being positive
-#define LONGITUDE 16.26048809382469 // in decimal degrees, with East being positive
+#define LATITUDE 47.964444 // in decimal degrees, with North being positive
+#define LONGITUDE 16.259444 // in decimal degrees, with East being positive
 
 // Set the timezone for the local time, the default is Vienna time.
 #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
-```
 
+#define NTP_SERVER "0.pool.ntp.org"
 ### Build and upload
+```
 
 It can then be built and uploaded using [platformio](https://platformio.org/).
 
@@ -67,6 +68,19 @@ and wakes it up again.
 
 The bottom of the two front buttons can be used to switch between the 
 debug information page and the clock. 
+
+### BCMT and ECET Calculation
+
+The BCMT and ECET calculation are performed using the
+[sunset](https://github.com/buelowp/sunset) library for Arduino. 
+
+BCMT and ECET are calculated for the current local date day but shown
+in UTC. Therefore, BCMT or ECET can actually be on a different UTC day. 
+
+Both are returned in fractional minutes, which are then rounded and converted
+to hours and minutes. Therefore, a one-minute difference may be 
+observed compared to other clocks or lists, depending on which treatment
+of seconds those sources choose. 
 
 ## Customization
 

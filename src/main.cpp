@@ -174,15 +174,10 @@ void setup()
             delay(120);
     }
 #endif
-    /* Lighten the screen with gradient */
+    /* Set the screen brightness */
     ledcSetup(0, 10000, 8);
     ledcAttachPin(PIN_LCD_BL, 0);
-    for (uint8_t i = 0; i < 0xFF; i++) {
-        ledcWrite(0, i);
-        delay(2);
-    }
-
-    ledcWrite(0, 0xFF/2);
+    ledcWrite(0, LCD_BRIGHTNESS);
 
     lv_init();
     lv_disp_buf = (lv_color_t *)heap_caps_malloc(LVGL_LCD_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
