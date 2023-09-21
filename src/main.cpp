@@ -8,6 +8,8 @@
  * switch macro. */
 #define LCD_MODULE_CMD_1
 
+#define MINUTES_PER_DAY 1440.0
+
 #include "OneButton.h" /* https://github.com/mathertel/OneButton.git */
 #include "Wire.h"
 #include "esp_lcd_panel_io.h"
@@ -36,6 +38,7 @@ int current_sunrise_calculation_day = -1;
 boolean syncEventTriggered = false; // True if a time even has been triggered
 NTPEvent_t ntpEvent; // Last triggered event
 boolean isFirstSync = true;
+boolean syncNotNeededReceived = false;
 
 #if defined(LCD_MODULE_CMD_1)
 typedef struct {
@@ -264,12 +267,18 @@ void loop()
 }
 
 void processSyncEvent (NTPEvent_t ntpEvent) {
+    syncNotNeededReceived = false;
+    Serial.printf ("[NTP-event] %s\n", NTP.ntpEvent2str (ntpEvent));
+
     switch (ntpEvent.event) {
         case timeSyncd:
+            break;
         case partlySync:
+            break;
         case syncNotNeeded:
+            syncNotNeededReceived = true;
+            break;
         case accuracyError:
-            Serial.printf ("[NTP-event] %s\n", NTP.ntpEvent2str (ntpEvent));
             break;
         default:
             break;
@@ -283,8 +292,8 @@ void updateSunCalculations(const tm &timeinfo) {
         double sunrise = sun.calcCivilSunrise();
         double sunset = sun.calcCivilSunset();
 
-        String sunrise_formatted = formatFractionalMinutes(round(sunrise));
-        String sunset_formatted = formatFractionalMinutes(round(sunset));
+        String sunrise_formatted = formatFractionalMinutes(floor(sunrise));
+        String sunset_formatted = formatFractionalMinutes(floor(sunset));
 
         lv_msg_send(MSG_BCMT, sunrise_formatted.c_str());
         lv_msg_send(MSG_ECET, sunset_formatted.c_str());
@@ -294,7 +303,7 @@ void updateSunCalculations(const tm &timeinfo) {
         Serial.printf("Updated BCMT to %s and ECET to %s\n",
                       sunrise_formatted.c_str(),
                       sunset_formatted.c_str());
-        Serial.printf("Fractional minutes: BCMT %.2f and ECET %.2f",
+        Serial.printf("Fractional minutes: BCMT %.2f and ECET %.2f\n",
                       sunrise,
                       sunset);
     }
@@ -361,6 +370,11 @@ bool isTimeValid() {
     int32_t ntp_sync_age_seconds_int = static_cast<int32_t>(ntp_sync_age_seconds);
     lv_msg_send(MSG_SYNC_AGE, &ntp_sync_age_seconds_int);
 
+    if(syncNotNeededReceived) {
+        lv_msg_send(MSG_SYNC_STATUS, "Sync not needed");
+        return true;
+    }
+
     if(isFirstSync) {
         // the status check needs to be stricter on the first sync
         if(NTP.syncStatus() == syncd) {
@@ -407,8 +421,21 @@ String formatFractionalMinutes(double fractMinutes) {
         return "INOP";
     }
 
-    int hours = floor(fractMinutes / 60);
-    int minutes = static_cast<int>(round(fractMinutes - hours * 60));
+    // No sunset or sunrise, e.g. above the arctic circle in summer or winter
+    if(std::isnan(fractMinutes)) {
+        return "NONE";
+    }
+
+    // Sunrise or sunset can be on the previous or next day,
+    // but we only show the time not the day
+    double fractMinutes_bounded = fractMinutes;
+    while(fractMinutes_bounded < 0) {
+        fractMinutes_bounded += MINUTES_PER_DAY;
+    }
+    fractMinutes_bounded = fmod(fractMinutes_bounded, MINUTES_PER_DAY);
+
+    int hours = floor(fractMinutes_bounded / 60);
+    int minutes = static_cast<int>(round(fractMinutes_bounded - hours * 60));
 
     char buffer[10];
     snprintf(buffer, sizeof(buffer), "%02d:%02d", hours, minutes);

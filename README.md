@@ -69,7 +69,17 @@ and wakes it up again.
 The bottom of the two front buttons can be used to switch between the 
 debug information page and the clock. 
 
-### BCMT and ECET Calculation
+### BCMT and ECET 
+
+#### Display
+
+BCMT and ECET are shown in UTC. Therefore, the BCMT or ECET shown 
+might actually be for the previous or next day in the UTC timezone.  
+
+If no BCMT or ECET exists, as is e.g. the case for locations above
+the arctic circle on certain days, NONE is shown instead. 
+
+#### Calculation
 
 The BCMT and ECET calculation are performed using the
 [sunset](https://github.com/buelowp/sunset) library for Arduino. 
@@ -77,10 +87,16 @@ The BCMT and ECET calculation are performed using the
 BCMT and ECET are calculated for the current local date day but shown
 in UTC. Therefore, BCMT or ECET can actually be on a different UTC day. 
 
-Both are returned in fractional minutes, which are then rounded and converted
+Both are returned in fractional minutes, which are then floored and converted
 to hours and minutes. Therefore, a one-minute difference may be 
 observed compared to other clocks or lists, depending on which treatment
-of seconds those sources choose. 
+of seconds those sources choose. In this clock seconds are simply cut off, 
+therefore for example 17:59:55 would be shown as 17:59 as would 17:59:01. 
+
+Please also note that some other sources report BCMT and ECET for average
+years, which will also cause a difference. The Austrian AIP for example
+states that a difference of up to 3 minutes is possible between
+an actual and average year for the tabulated times (GEN 2.7-1.4). 
 
 ## Customization
 
