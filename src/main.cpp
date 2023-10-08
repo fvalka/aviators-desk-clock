@@ -80,6 +80,10 @@ void updateSunCalculations(const tm &timeinfo);
 
 void processSyncEvent(NTPEvent_t ntpEvent);
 
+void updateClock();
+
+void updateDebugInformation();
+
 static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
     if (is_initialized_lvgl) {
@@ -243,26 +247,31 @@ void loop()
 
     static uint32_t last_tick;
     if (millis() - last_tick > 100) {
-        struct tm timeinfo;
-        struct tm timeinfo_gmt;
-        if (getLocalTime(&timeinfo)) {
-            String localtime_formatted = formatTime(&timeinfo);
-            lv_msg_send(MSG_LOCALTIME, localtime_formatted.c_str());
-
-            updateSunCalculations(timeinfo);
-
-        }
-
-        if(getGMTTime(&timeinfo_gmt)) {
-            String gmttime_formatted = formatTime(&timeinfo_gmt);
-            lv_msg_send(MSG_GMTTIME, gmttime_formatted.c_str());
-        }
-
-        uint32_t volt = (analogRead(PIN_BAT_VOLT) * 2 * 3.3 * 1000) / 4096;
-        lv_msg_send(MSG_NEW_VOLT, &volt);
-        lv_msg_send(MSG_UPTIME, NTP.getUptimeString());
-
+        updateClock();
+        updateDebugInformation();
         last_tick = millis();
+    }
+}
+
+void updateDebugInformation() {
+    uint32_t volt = (analogRead(PIN_BAT_VOLT) * 2 * 3.3 * 1000) / 4096;
+    lv_msg_send(MSG_NEW_VOLT, &volt);
+    lv_msg_send(MSG_UPTIME, NTP.getUptimeString());
+}
+
+void updateClock() {
+    struct tm timeinfo_local;
+    struct tm timeinfo_gmt;
+    if (getLocalTime(&timeinfo_local)) {
+        String localtime_formatted = formatTime(&timeinfo_local);
+        lv_msg_send(MSG_LOCALTIME, localtime_formatted.c_str());
+
+        updateSunCalculations(timeinfo_local);
+    }
+
+    if(getGMTTime(&timeinfo_gmt)) {
+        String gmttime_formatted = formatTime(&timeinfo_gmt);
+        lv_msg_send(MSG_GMTTIME, gmttime_formatted.c_str());
     }
 }
 

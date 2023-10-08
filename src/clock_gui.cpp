@@ -129,18 +129,16 @@ void ui_begin() {
     String text;
     esp_chip_info_t t;
     esp_chip_info(&t);
-    text = "chip : ";
+    text = "chip: ";
     text += ESP.getChipModel();
-    text += "\n";
-    text += "psram size : ";
+    text += ", ";
+    text += "psram: ";
     text += ESP.getPsramSize() / 1024;
     text += " KB\n";
-    text += "flash size : ";
+    text += "flash: ";
     text += ESP.getFlashChipSize() / 1024;
     text += " KB\n";
     text += ESP.getSketchMD5();
-
-
 
     lv_label_set_text(debug_label, text.c_str());
     lv_obj_align(debug_label, LV_ALIGN_TOP_LEFT, 0, 0);
